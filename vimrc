@@ -2,6 +2,7 @@
 filetype off
 set nocompatible
 set rtp+=~/.vim/bundle/Vundle.vim
+set rtp+=/usr/bin/fzf
 set shell=bash
 call vundle#begin()
 
@@ -9,9 +10,10 @@ call vundle#begin()
 Plugin 'gmarik/Vundle.vim'
 
 " Search, File Directories...
-Plugin 'ctrlpvim/ctrlp.vim' " Fuzzy finder search
+Plugin 'junegunn/fzf.vim' " Fuzzy finder search
 Plugin 'scrooloose/nerdtree' " File navigation tree
 Plugin 'jistr/vim-nerdtree-tabs'
+Plugin 'tpope/vim-unimpaired'
 
 " Buffer plugins
 Plugin 'rbgrouleff/bclose.vim' " Close buffers without closing window
@@ -19,7 +21,7 @@ Plugin 'bufkill.vim'
 Plugin 'jlanzarotta/bufexplorer' " Better buffer explorer
 
 " Language Support
-Plugin 'scrooloose/syntastic'
+Plugin 'w0rp/ale'
 Plugin 'pangloss/vim-javascript'
 Plugin 'vim-pandoc/vim-pandoc'
 Plugin 'vim-pandoc/vim-pandoc-syntax'
@@ -33,11 +35,13 @@ Plugin 'rust-lang/rust.vim'
 Plugin 'racer-rust/vim-racer'
 Plugin 'linkinpark342/xonsh-vim'
 Plugin 'vim-scripts/indentpython.vim'
+Plugin 'dag/vim-fish'
 
 " Stylistic
-Plugin 'bling/vim-airline' " Nice status bar
-Plugin 'vim-airline/vim-airline-themes'
-Plugin 'airblade/vim-gitgutter' " Git visual support
+Plugin 'jacoborus/tender.vim'
+Plugin 'itchyny/lightline.vim'
+Plugin 'airblade/vim-gitgutter'
+Plugin 'tpope/vim-fugitive'
 
 " Auto completion and snippets
 Plugin 'szw/vim-tags' " ctags support
@@ -48,6 +52,7 @@ Plugin 'davidhalter/jedi-vim' " Python jedi support
 Plugin 'scrooloose/nerdcommenter' " Comment code easily
 Plugin 'Raimondi/delimitMate' " Auto add pairing delimiters
 Plugin 'jeffkreeftmeijer/vim-numbertoggle' " Switch line numbering in cmd vs insert mode
+Plugin 'tmhedberg/SimpylFold' " Code folding
 
 call vundle#end()
 
@@ -55,6 +60,7 @@ syntax on
 filetype plugin indent on
 set encoding=utf-8
 set showcmd
+set foldlevel=3
 set term=xterm-256color
 
 " Configure line number stuff
@@ -88,6 +94,7 @@ set hlsearch
 set incsearch
 set ignorecase
 set smartcase
+set tags=/home/entilzha/tags,./tags,tags;
 
 " Disable backup and swapfile
 set noswapfile
@@ -101,22 +108,12 @@ set guioptions-=L
 set mouse=a
 
 " Set my color scheme and preferred font
-"set guifont="Anonymous Pro"
+set guifont="Anonymice Powerline"
+set guioptions-=m
+set guioptions-=T
+set guioptions-=r
 
-colorscheme molokai
-
-" Configure python checker
-" let g:syntastic_python_checkers = ['pylint']
-" let g:syntastic_python_pylint_args = '--rcfile=~/.pylintrc'
-
-" Syntastic
-set statusline+=%#warningmsg#
-set statusline+=%{SyntasticStatuslineFlag()}
-set statusline+=%*
-
-let g:syntastic_check_on_open = 1
-let g:syntastic_check_on_wq = 0
-let g:syntastic_python_checkers = ['python', 'flake8', 'pylint']
+colorscheme tender
 
 "
 let NERDTreeIgnore = ['\.pyc$']
@@ -126,6 +123,15 @@ map <leader>g :YcmCompleter GoToDefinitionElseDeclaration<CR>
 " Remap autocomplete to something more natural
 inoremap <C-Space> <C-x><C-o>
 inoremap <C-@> <C-Space>
+
+" GitGutter styling to use · instead of +/-
+let g:gitgutter_sign_added = '∙'
+let g:gitgutter_sign_modified = '∙'
+let g:gitgutter_sign_removed = '∙'
+let g:gitgutter_sign_modified_removed = '∙'
+
+let g:ale_sign_warning = '▲'
+let g:ale_sign_error = '✗'
 
 " Set preview/scratch off
 set completeopt=menu
@@ -159,8 +165,8 @@ autocmd InsertLeave * if pumvisible() == 0|pclose|endif
 " python from powerline.vim import setup as powerline_setup
 " python powerline_setup()
 " python del powerline_setup
-"let g:airline#extensions#tabline#enabled = 1
-"let g:airline_powerline_fonts = 1
+let g:airline#extensions#tabline#enabled = 1
+let g:airline_powerline_fonts = 1
 set laststatus=2
 set noshowmode
 
@@ -261,4 +267,54 @@ let g:vim_json_syntax_conceal = 0
 " Change cursor modes
 au InsertEnter * silent execute "!echo -en \<esc>[5 q"
 au InsertLeave * silent execute "!echo -en \<esc>[2 q"
+
+nmap ; :Buffers<CR>
+nmap <Leader>t :Files<CR>
+nmap <Leader>r :Tags<CR>
+
+let g:lightline = {
+\ 'active': {
+\   'left': [['mode', 'paste'], ['filename', 'modified']],
+\   'right': [['lineinfo'], ['percent'], ['readonly', 'linter_warnings', 'linter_errors', 'linter_ok']]
+\ },
+\ 'component_expand': {
+\   'linter_warnings': 'LightlineLinterWarnings',
+\   'linter_errors': 'LightlineLinterErrors',
+\   'linter_ok': 'LightlineLinterOK'
+\ },
+\ 'component_type': {
+\   'linter_warnings': 'warning',
+\   'linter_errors': 'error'
+\ }
+\ }
+
+function! LightlineLinterWarnings() abort
+  let l:counts = ale#statusline#Count(bufnr(''))
+  let l:all_errors = l:counts.error + l:counts.style_error
+  let l:all_non_errors = l:counts.total - l:all_errors
+  return l:counts.total == 0 ? '' : printf('%d ◆', all_non_errors)
+endfunction
+
+function! LightlineLinterErrors() abort
+  let l:counts = ale#statusline#Count(bufnr(''))
+  let l:all_errors = l:counts.error + l:counts.style_error
+  let l:all_non_errors = l:counts.total - l:all_errors
+  return l:counts.total == 0 ? '' : printf('%d ✗', all_errors)
+endfunction
+
+function! LightlineLinterOK() abort
+  let l:counts = ale#statusline#Count(bufnr(''))
+  let l:all_errors = l:counts.error + l:counts.style_error
+  let l:all_non_errors = l:counts.total - l:all_errors
+  return l:counts.total == 0 ? '✓ ' : ''
+endfunction
+
+autocmd User ALELint call s:MaybeUpdateLightline()
+
+" Update and show lightline but only if it's visible (e.g., not in Goyo)
+function! s:MaybeUpdateLightline()
+  if exists('#lightline')
+    call lightline#update()
+  end
+endfunction
 
