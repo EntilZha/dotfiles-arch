@@ -2,8 +2,8 @@ Config {
 
    -- appearance
      font =         "xft:Bitstream Vera Sans Mono:size=9:bold:antialias=true"
-   , bgColor =      "black"
-   , fgColor =      "#646464"
+   , bgColor =      "#151a1c"
+   , fgColor =      "#828282"
    , position =     Top
    , border =       BottomB
    , borderColor =  "#646464"
@@ -11,7 +11,7 @@ Config {
    -- layout
    , sepChar =  "%"   -- delineator between plugin names and straight text
    , alignSep = "}{"  -- separator between left-right alignment
-   , template = " %StdinReader% | %default:Master% | %multicpu% | %coretemp% | %memory% | %mobargpustat% | %dynnetwork% }{ %date% "
+   , template = " %StdinReader% | %default:Master% | %multicpu% | %coretemp% | %memory% | %mobargpustat% | <icon=/home/entilzha/.xmobar/ping.xbm/> %mobarping.py% | %dynnetwork% }{ %date% "
 
    -- general behavior
    , lowerOnStart =     True    -- send to bottom of window stack on start
@@ -37,7 +37,7 @@ Config {
    --   see http://projects.haskell.org/xmobar/#system-monitor-plugins.
    , commands =
         -- network activity monitor (dynamic interface resolution)
-        [ Run DynNetwork     [ "--template" , "<dev>: <tx>kB/s|<rx>kB/s"
+        [ Run DynNetwork     [ "--template" , "I:<rx> O:<tx>"
                              , "--Low"      , "1000"       -- units: B/s
                              , "--High"     , "5000"       -- units: B/s
                              , "--low"      , "darkgreen"
@@ -46,7 +46,7 @@ Config {
                              ] 10
 
         -- cpu activity monitor
-        , Run MultiCpu       [ "--template" , "CPU Total: <total>%|<total0>%|<total1>%|<total2>%|<total3>%|<total4>%|<total5>%|<total6>%|<total7>%"
+        , Run MultiCpu       [ "--template" , "<icon=/home/entilzha/.xmobar/cpu.xbm/> <total>% ~ <total0>|<total1>|<total2>|<total3>|<total4>|<total5>|<total6>|<total7>"
                              , "--Low"      , "50"         -- units: %
                              , "--High"     , "85"         -- units: %
                              , "--low"      , "darkgreen"
@@ -55,7 +55,7 @@ Config {
                              ] 10
 
         -- cpu core temperature monitor
-        , Run CoreTemp       [ "--template" , "Temp: <core0>C|<core1>C|<core2>C|<core3>C"
+        , Run CoreTemp       [ "--template" , "<icon=/home/entilzha/.xmobar/temp.xbm/> <core0>C|<core1>C|<core2>C|<core3>C"
                              , "--Low"      , "70"        -- units: C
                              , "--High"     , "80"        -- units: C
                              , "--low"      , "darkgreen"
@@ -64,7 +64,7 @@ Config {
                              ] 50
 
         -- memory usage monitor
-        , Run Memory         [ "--template" ,"Mem: <usedratio>%"
+        , Run Memory         [ "--template" ,"<icon=/home/entilzha/.xmobar/mem.xbm/> <usedratio>%"
                              , "--Low"      , "20"        -- units: %
                              , "--High"     , "90"        -- units: %
                              , "--low"      , "darkgreen"
@@ -72,12 +72,13 @@ Config {
                              , "--high"     , "darkred"
                              ] 10
 
-        , Run Volume "default" "Master" [] 10
+        , Run Volume "default" "Master" ["--template", "<icon=/home/entilzha/.xmobar/vol.xbm/> <volume>%"] 10
 
         -- time and date indicator
         --   (%F = y-m-d date, %a = day of week, %T = h:m:s time)
         , Run Date           "<fc=#ABABAB>%F (%a) %r</fc>" "date" 10
-        , Run Com "mobargpustat" [] "" 0
+        , Run Com "mobargpustat" [] "" 20
+        , Run Com "mobarping.py" [] "" 20
         , Run StdinReader
         ]
 }
