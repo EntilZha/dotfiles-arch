@@ -2,7 +2,7 @@
 filetype off
 set nocompatible
 set rtp+=~/.vim/bundle/Vundle.vim
-set rtp+=/usr/bin/fzf
+set rtp+=~/.fzf/
 set shell=bash
 call vundle#begin()
 
@@ -17,25 +17,25 @@ Plugin 'tpope/vim-unimpaired'
 
 " Buffer plugins
 Plugin 'rbgrouleff/bclose.vim' " Close buffers without closing window
+Plugin 'ap/vim-buftabline'
 Plugin 'bufkill.vim'
 Plugin 'jlanzarotta/bufexplorer' " Better buffer explorer
 
 " Language Support
 Plugin 'w0rp/ale'
-Plugin 'pangloss/vim-javascript'
 Plugin 'vim-pandoc/vim-pandoc'
 Plugin 'vim-pandoc/vim-pandoc-syntax'
 Plugin 'LaTeX-Box-Team/LaTeX-Box'
-Plugin 'vim-scripts/nginx.vim'
-Plugin 'ekalinin/Dockerfile.vim'
-Plugin 'elzr/vim-json'
 Plugin 'vim-scripts/SQLComplete.vim'
-Plugin 'derekwyatt/vim-scala'
-Plugin 'rust-lang/rust.vim'
-Plugin 'racer-rust/vim-racer'
-Plugin 'linkinpark342/xonsh-vim'
 Plugin 'vim-scripts/indentpython.vim'
 Plugin 'dag/vim-fish'
+Plugin 'elzr/vim-json'
+Plugin 'pangloss/vim-javascript'
+Plugin 'vim-scripts/nginx.vim'
+Plugin 'ekalinin/Dockerfile.vim'
+Plugin 'rust-lang/rust.vim'
+Plugin 'racer-rust/vim-racer'
+Plugin 'derekwyatt/vim-scala'
 
 " Stylistic
 Plugin 'jacoborus/tender.vim'
@@ -50,9 +50,9 @@ Plugin 'davidhalter/jedi-vim' " Python jedi support
 
 " Utility
 Plugin 'scrooloose/nerdcommenter' " Comment code easily
-Plugin 'Raimondi/delimitMate' " Auto add pairing delimiters
-Plugin 'jeffkreeftmeijer/vim-numbertoggle' " Switch line numbering in cmd vs insert mode
+Plugin 'jiangmiao/auto-pairs'
 Plugin 'tmhedberg/SimpylFold' " Code folding
+Plugin 'easymotion/vim-easymotion'
 
 call vundle#end()
 
@@ -61,6 +61,7 @@ filetype plugin indent on
 set encoding=utf-8
 set showcmd
 set foldlevel=3
+set t_Co=256
 set term=xterm-256color
 
 " Configure line number stuff
@@ -74,20 +75,15 @@ let g:UseNumberToggleTrigger = 0
 set autowrite
 set ruler
 
-" Remap leader
-let mapleader=","
 
 " Enable code folding
 set foldenable
-nnoremap <leader>ft Vatzf
-
-" Easier vertical split
-nnoremap <leader>v <C-w>v<C-w>l
 
 " Default tabstop and shiftwidth
 set tabstop=2 shiftwidth=2
 set backspace=indent,eol,start
 set expandtab
+
 
 " Configure search
 set hlsearch
@@ -113,23 +109,17 @@ set guioptions-=m
 set guioptions-=T
 set guioptions-=r
 
+if (has("termguicolors"))
+  set termguicolors
+endif
 colorscheme tender
 
-"
 let NERDTreeIgnore = ['\.pyc$']
 
-" YCM Config
-map <leader>g :YcmCompleter GoToDefinitionElseDeclaration<CR>
-" Remap autocomplete to something more natural
-inoremap <C-Space> <C-x><C-o>
-inoremap <C-@> <C-Space>
-
-" GitGutter styling to use · instead of +/-
 let g:gitgutter_sign_added = '∙'
 let g:gitgutter_sign_modified = '∙'
 let g:gitgutter_sign_removed = '∙'
 let g:gitgutter_sign_modified_removed = '∙'
-
 let g:ale_sign_warning = '▲'
 let g:ale_sign_error = '✗'
 
@@ -140,8 +130,46 @@ set completeopt=menu
 set wildmenu
 set wildmode=list:longest
 
-" Write as sudo when needed
-cmap w!! w !sudo tee > /dev/null %
+" Set splits to be natural
+set splitbelow
+set splitright
+
+" Enable list of buffers and show only filename
+let g:airline#extensions#tabline#enabled = 1
+let g:airline_powerline_fonts = 1
+set laststatus=2
+set noshowmode
+
+" Disable pandoc changing symbols in markdown
+let g:pandoc#syntax#conceal#use = 0
+
+" Configure Pandoc to not fold so much
+let g:pandoc#folding#level = 4
+
+" Configure LaTeX-Box
+let g:LatexBox_latexmk_preview_continuously = 1
+let g:LatexBox_quickfix = 4
+
+" Configure LaTeX-Box
+let g:LatexBox_latexmk_options = "-pvc -pdfps"
+
+
+" Remap leader
+let mapleader=","
+
+" Easier vertical split
+nnoremap <leader>v <C-w>v<C-w>l
+
+" Buffer shortcuts
+nnoremap <C-Tab> :bnext<cr>
+nnoremap <C-S-Tab> :bprevious<cr>
+nnoremap <C-~> :Bclose<cr>
+
+" YCM Config
+map <leader>g :YcmCompleter GoToDefinitionElseDeclaration<CR>
+" Remap autocomplete to something more natural
+inoremap <C-Space> <C-x><C-o>
+inoremap <C-@> <C-Space>
 
 " Remap pane switching shortcuts
 nnoremap <C-J> <C-W><C-J>
@@ -153,32 +181,18 @@ nnoremap <C-H> <C-W><C-H>
 map j gj
 map k gk
 
-" Set splits to be natural
-set splitbelow
-set splitright
+" Unhighlight
+nnoremap <Leader>hh :nohl<cr>
+nnoremap <Leader>hn :hl<cr>
+
+" Buffers
+nmap ; :Buffers<CR>
+nmap <Leader>f :Files<CR>
+nmap <Leader>t :Tags<CR>
 
 " Make the preview of methods on autocomplete close once a selection is made
 autocmd CursorMovedI * if pumvisible() == 0|pclose|endif
 autocmd InsertLeave * if pumvisible() == 0|pclose|endif
-
-" Enable list of buffers and show only filename
-" python from powerline.vim import setup as powerline_setup
-" python powerline_setup()
-" python del powerline_setup
-let g:airline#extensions#tabline#enabled = 1
-let g:airline_powerline_fonts = 1
-set laststatus=2
-set noshowmode
-
-" Enable short cuts for switching buffers
-nnoremap <Leader>bn :bnext<cr>
-nnoremap <Leader>bp :bprevious<cr>
-nnoremap <C-Tab> :bnext<cr>
-nnoremap <C-S-Tab> :bprevious<cr>
-
-" Hotkey for closing a buffer
-nnoremap <Leader>bc :Bclose<cr>
-
 
 " Open files that are not vim in their correct program
 augroup nonvim
@@ -192,8 +206,6 @@ augroup end
 " Force *.md files to be recognized as markdown
 autocmd BufNewFile,BufReadPost *.md set filetype=markdown
 
-" Disable pandoc changing symbols in markdown
-let g:pandoc#syntax#conceal#use = 0
 
 " Don't let vim make a bell on entering
 set noerrorbells
@@ -205,35 +217,16 @@ autocmd InsertEnter * syn clear EOLWS | syn match EOLWS excludenl /\s\+\%#\@!$/
 autocmd InsertLeave * syn clear EOLWS | syn match EOLWS excludenl /\s\+$/
 highlight EOLWS ctermbg=blue guibg=#AAD7E6
 
-" Configure Pandoc to not fold so much
-let g:pandoc#folding#level = 4
 
 " Convention for me is to map <Leader>c to whatever the related
 " compile function is in the langauge. This occurs in the ftplugin
-
-" Make it easy to open my vimrc
-nnoremap <Leader>ev :vsplit $MYVIMRC<cr>
-nnoremap <Leader>sv :source $MYVIMRC<cr>
 
 " Set spell check for markdown
 autocmd BufRead,BufNewFile *.md setlocal spell
 autocmd FileType gitcommit setlocal spell
 
-" Configure LaTeX-Box
-let g:LatexBox_latexmk_preview_continuously = 1
-let g:LatexBox_quickfix = 4
-
-" Unhighlight
-nnoremap <Leader>hh :nohl<cr>
-nnoremap <Leader>hn :hl<cr>
-
-" Configure LaTeX-Box
-let g:LatexBox_latexmk_options = "-pvc -pdfps"
-
 " Auto open nerdtree and close when its the only thing left
 " autocmd vimenter * NERDTree
-autocmd StdinReadPre * let s:std_in=1
-autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
 nnoremap <C-N> :NERDTreeToggle<CR>
 
@@ -268,9 +261,6 @@ let g:vim_json_syntax_conceal = 0
 au InsertEnter * silent execute "!echo -en \<esc>[5 q"
 au InsertLeave * silent execute "!echo -en \<esc>[2 q"
 
-nmap ; :Buffers<CR>
-nmap <Leader>t :Files<CR>
-nmap <Leader>r :Tags<CR>
 
 let g:lightline = {
 \ 'active': {
@@ -317,4 +307,3 @@ function! s:MaybeUpdateLightline()
     call lightline#update()
   end
 endfunction
-
