@@ -15,6 +15,7 @@ function fish_prompt
   echo (pwd)
   set_color yellow
   echo -n "\$ "
+  sec_color normal
 end
 
 # GLOBALS
@@ -25,6 +26,10 @@ set -gx EDITOR vim
 alias s3jupyter="jupyter notebook --config ~/jupyter_s3_config.py"
 alias gl=glances
 alias gtop="watch --color -n1.0 gpustat -c"
+alias xclip="xclip -selection clipboard"
+alias l="exa"
+alias b="bat"
+alias ncdu="ncdu --color dark"
 
 # Configure man pages
 set -gx LESS_TERMCAP_mb (printf '\e[01;31m') # enter blinking mode - red
@@ -36,6 +41,6 @@ set -gx LESS_TERMCAP_ue (printf '\e[0m') # leave underline mode
 set -gx LESS_TERMCAP_us (printf '\e[04;36m') # enter underline mode - cyan
 
 function pycharm
-  wmname LG3D; and ~/applications/pycharm-2017.2.3/bin/pycharm.sh &;
+  wmname LG3D; and ~/applications/pycharm/bin/pycharm.sh &;
 end
 
